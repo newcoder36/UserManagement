@@ -1,0 +1,135 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+  error:
+    include-stacktrace: never
+    include-message: always
+
+spring:
+  application:
+    name: nse-stock-analysis-bot
+  
+  # Web configuration - disable default static resource handling
+  web:
+    resources:
+      add-mappings: false  # This disables Spring Boot's default static resource handling
+  
+  mvc:
+    throw-exception-if-no-handler-found: true
+  
+  # Development Database Configuration (PostgreSQL)
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://postgres:5432/nse_bot_dev}
+    username: ${DATABASE_USERNAME:nse_bot}
+    password: ${DATABASE_PASSWORD:dev_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: update  # Create/update tables in development
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Development Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:dev_redis_password}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
+  
+  # Development Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 120000  # 2 minutes for faster development
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "nse-bot-dev:"
+
+# Development Telegram Bot Configuration  
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:8380622246:AAHHkjfnuK7z2KVFc11Bnat0uVtweNuSLHA}
+    username: ${TELEGRAM_BOT_USERNAME:missiontrade_bot}
+    webhook-path: ${TELEGRAM_WEBHOOK_PATH:/webhook}
+
+# NSE API Configuration for Development
+nse:
+  api:
+    base-url: https://www.nseindia.com/api
+    timeout: 15000  # Longer timeout for development
+    retry-attempts: 2  # Fewer retries for faster development
+    rate-limit:
+      requests-per-minute: 30  # Lower rate limit for development
+
+# Analysis Configuration
+analysis:
+  confidence:
+    threshold: 60.0  # Lower threshold for development testing
+  strategies:
+    enabled:
+      - RSI
+      - MACD
+      - BOLLINGER_BANDS
+      - MOVING_AVERAGE
+      - VOLUME_ANALYSIS
+  ml:
+    model-path: /app/models/
+    prediction-horizon: 1
+
+# Development Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.nsebot: DEBUG
+    com.nsebot.client.NSEApiClient: TRACE
+    org.springframework.web: DEBUG
+    org.telegram.telegrambots: DEBUG
+    org.hibernate: INFO
+    org.springframework.data.redis: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/nse-bot/application.log
+
+# Management and Monitoring for Development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,beans,configprops,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  security:
+    enabled: false  # Disable security for development

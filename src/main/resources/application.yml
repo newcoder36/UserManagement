@@ -1,0 +1,105 @@
+server:
+  port: 8082
+  
+spring:
+  application:
+    name: nse-stock-analysis-bot
+  
+  # Database Configuration
+  datasource:
+    url: jdbc:h2:mem:testdb  # Using H2 for development, PostgreSQL for production
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  # Cache Configuration - Disabled for development
+  cache:
+    type: none  # Disable Redis caching for now
+    #type: redis  
+    #redis:
+    #  time-to-live: 300000  # 5 minutes default TTL
+
+# Telegram Bot Configuration
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:8380622246:AAHHkjfnuK7z2KVFc11Bnat0uVtweNuSLHA}
+    username: ${TELEGRAM_BOT_USERNAME:missiontrade_bot}
+    webhook-path: ${TELEGRAM_WEBHOOK_PATH:/webhook}
+
+# NSE API Configuration
+nse:
+  api:
+    base-url: https://www.nseindia.com/api
+    timeout: 5000  # Reduced timeout - fail fast to Yahoo Finance
+    retry-attempts: 1  # Reduced retries - fail fast to Yahoo Finance
+    rate-limit:
+      requests-per-minute: 30  # Reduced rate to avoid timeouts
+
+# Yahoo Finance Configuration
+yahoo:
+  finance:
+    timeout: 8000  # 8 second timeout for Yahoo Finance
+    retry-attempts: 2
+    circuit-breaker:
+      failure-threshold: 5
+      timeout: 30000  # 30 seconds
+    rate-limit:
+      requests-per-minute: 120
+
+# Analysis Configuration
+analysis:
+  confidence:
+    threshold: 70.0  # Minimum confidence percentage for recommendations
+  strategies:
+    enabled:
+      - RSI
+      - MACD
+      - BOLLINGER_BANDS
+      - MOVING_AVERAGE
+      - VOLUME_ANALYSIS
+  ml:
+    model-path: models/
+    prediction-horizon: 1  # Hours for intraday prediction
+
+# Logging Configuration
+logging:
+  level:
+    com.nsebot: DEBUG
+    org.springframework.web: INFO
+    org.telegram.telegrambots: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/nse-bot.log
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

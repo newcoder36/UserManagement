@@ -1,0 +1,58 @@
+# Docker ignore file for NSE Stock Analysis Bot
+
+# Version control
+.git/
+.gitignore
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build artifacts
+target/
+build/
+out/
+*.class
+
+# Logs
+*.log
+logs/
+
+# Environment files (will be handled by Docker Compose)
+.env
+.env.local
+.env.development
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Documentation (not needed in container)
+README.md
+docs/
+*.md
+
+# Scripts (not needed in container)
+scripts/
+*.bat
+*.sh
+
+# Docker files (not needed in container)
+docker-compose*.yml
+Dockerfile*
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

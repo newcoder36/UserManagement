@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  postgres:
+    image: postgres:15-alpine
+    container_name: nse-bot-postgres-dev
+    environment:
+      POSTGRES_DB: nse_bot_dev
+      POSTGRES_USER: nse_bot
+      POSTGRES_PASSWORD: dev_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "5433:5432"  # Use different external port to avoid conflicts
+    networks:
+      - nse-bot-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nse_bot -d nse_bot_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache for Development
+  redis:
+    image: redis:7-alpine
+    container_name: nse-bot-redis-dev
+    command: >
+      redis-server
+      --requirepass dev_redis_password
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 300 1
+      --loglevel notice
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6380:6379"  # Use different external port to avoid conflicts
+    networks:
+      - nse-bot-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # NSE Bot Application (Development)
+  nse-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nse-bot-app-dev
+    environment:
+      # Database Configuration
+      DATABASE_URL: jdbc:postgresql://postgres:5432/nse_bot_dev
+      DATABASE_USERNAME: nse_bot
+      DATABASE_PASSWORD: dev_password
+      
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: dev_redis_password
+      REDIS_DATABASE: 0
+      
+      # Telegram Bot Configuration
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-DevNSEBot}
+      
+      # Application Configuration
+      SPRING_PROFILES_ACTIVE: dev
+      TZ: Asia/Kolkata
+      
+      # Development Settings
+      LOG_LEVEL: DEBUG
+      
+      # JVM Configuration for Development
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      
+    ports:
+      - "9080:8080"  # Application port (using unique port)
+      - "5005:5005"  # Debug port
+    networks:
+      - nse-bot-dev-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - ./logs:/var/log/nse-bot
+      - ./models:/app/models:ro
+      # Hot reload support for development
+      - ./target:/app/target:ro
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  nse-bot-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

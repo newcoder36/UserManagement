@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn test:*)",
+      "Bash(chmod:*)",
+      "Bash(find:*)",
+      "Bash(mvn dependency:tree:*)",
+      "Bash(docker-compose:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Read(/E:\\e\\workspace/**)",
+      "Bash(docker logs:*)",
+      "Bash(./E:workspacemissiontradetest_api.sh)",
+      "Bash(bash:*)",
+      "Bash(./test_api.sh:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(taskkill:*)",
+      "Bash(grep:*)",
+      "Bash(mvn:*)",
+      "Bash(java:*)",
+      "Bash(pkill:*)",
+      "Bash(jps:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker start:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "E:\\e\\workspace"
+    ]
+  }
+}

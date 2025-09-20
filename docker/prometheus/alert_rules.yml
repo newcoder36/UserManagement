@@ -1,0 +1,129 @@
+# Prometheus Alert Rules for NSE Stock Analysis Bot
+
+groups:
+  - name: nse-bot-alerts
+    rules:
+      # Application Health Alerts
+      - alert: NSEBotDown
+        expr: up{job="nse-bot-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: nse-bot
+        annotations:
+          summary: "NSE Bot application is down"
+          description: "NSE Bot application has been down for more than 1 minute."
+
+      - alert: NSEBotHighErrorRate
+        expr: rate(http_server_requests_seconds_count{job="nse-bot-app",status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: nse-bot
+        annotations:
+          summary: "High error rate detected in NSE Bot"
+          description: "NSE Bot is experiencing high error rate ({{ $value }} errors/sec)."
+
+      - alert: NSEBotHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="nse-bot-app"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: nse-bot
+        annotations:
+          summary: "High response time in NSE Bot"
+          description: "95th percentile response time is {{ $value }}s"
+
+      # Database Alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL database has been down for more than 1 minute."
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends{job="postgres"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High number of PostgreSQL connections"
+          description: "PostgreSQL has {{ $value }} active connections"
+
+      # Redis Cache Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 1 minute."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes{job="redis"} / redis_config_maxmemory{job="redis"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle",job="node-exporter"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes{job="node-exporter",fstype!="tmpfs"} / node_filesystem_size_bytes{job="node-exporter",fstype!="tmpfs"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Disk space is low"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      # Application-Specific Alerts
+      - alert: NSEBotHighRequestRate
+        expr: rate(http_server_requests_seconds_count{job="nse-bot-app"}[5m]) > 50
+        for: 5m
+        labels:
+          severity: info
+          service: nse-bot
+        annotations:
+          summary: "High request rate to NSE Bot"
+          description: "NSE Bot is receiving {{ $value }} requests/sec"
+
+      - alert: NSEBotUserRateLimitExceeded
+        expr: increase(nse_bot_rate_limit_exceeded_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: info
+          service: nse-bot
+        annotations:
+          summary: "Users exceeding rate limits"
+          description: "{{ $value }} rate limit violations in the last 5 minutes"

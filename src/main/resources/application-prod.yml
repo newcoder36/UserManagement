@@ -1,0 +1,200 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  http2:
+    enabled: true
+  
+spring:
+  application:
+    name: nse-stock-analysis-bot
+  
+  # Production Database Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/nse_bot}
+    username: ${DATABASE_USERNAME:nse_bot}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create in production
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+  
+  # Production Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      ssl:
+        enabled: ${REDIS_SSL:false}
+      jedis:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 2000ms
+  
+  # Production Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes default
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "nse-bot:"
+  
+  # Production Profiles
+  profiles:
+    active: prod
+
+# Production Telegram Bot Configuration
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN}
+    username: ${TELEGRAM_BOT_USERNAME}
+    webhook-url: ${TELEGRAM_WEBHOOK_URL}
+    webhook-path: ${TELEGRAM_WEBHOOK_PATH:/webhook}
+    max-connections: ${TELEGRAM_MAX_CONNECTIONS:100}
+    allowed-updates: ${TELEGRAM_ALLOWED_UPDATES:message,callback_query}
+
+# NSE API Configuration
+nse:
+  api:
+    base-url: https://www.nseindia.com/api
+    timeout: 10000
+    retry-attempts: 3
+    rate-limit:
+      requests-per-minute: 60
+      burst-capacity: 10
+
+# Analysis Configuration
+analysis:
+  confidence:
+    threshold: 70.0
+  strategies:
+    enabled:
+      - RSI
+      - MACD
+      - BOLLINGER_BANDS
+      - MOVING_AVERAGE
+      - VOLUME_ANALYSIS
+  ml:
+    model-path: /app/models/
+    prediction-horizon: 1
+    batch-size: 32
+
+# Production Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.nsebot: INFO
+    org.springframework.web: WARN
+    org.telegram.telegrambots: WARN
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/nse-bot/application.log
+    max-size: 100MB
+    max-history: 30
+
+# Management and Monitoring (Production)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,cache
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+      cache:
+        time-to-live: 1000ms
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+      slo:
+        http:
+          server:
+            requests: 50ms,100ms,200ms,500ms,1s,2s,5s
+  security:
+    enabled: true
+    roles: ACTUATOR
+
+# Security Configuration
+security:
+  api:
+    rate-limiting:
+      enabled: true
+      requests-per-minute: 30
+      burst-capacity: 10
+    authentication:
+      enabled: false  # Bot handles its own auth via Telegram
+  
+# Performance Configuration
+performance:
+  async:
+    core-pool-size: 10
+    max-pool-size: 50
+    queue-capacity: 1000
+  cache:
+    warmup:
+      enabled: true
+      scheduled: true
+      top-stocks-count: 20
+
+# Database Migration (Flyway)
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+# Error Handling
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
