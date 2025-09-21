@@ -93,10 +93,9 @@ CREATE TABLE rate_limit_violations (
 );
 
 -- Create indexes for rate limiting
-CREATE INDEX idx_rate_limit_violations_user_id1 ON rate_limit_violations(user_id);
+CREATE INDEX idx_rate_limit_violations_user_id ON rate_limit_violations(user_id);
 CREATE INDEX idx_rate_limit_violations_ip ON rate_limit_violations(ip_address);
 CREATE INDEX idx_rate_limit_violations_endpoint ON rate_limit_violations(endpoint);
-CREATE INDEX idx_rate_limit_violations_created_at ON rate_limit_violations(created_at);
 CREATE INDEX idx_rate_limit_violations_type ON rate_limit_violations(violation_type);
 
 -- Session tracking table
