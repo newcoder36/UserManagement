@@ -94,12 +94,12 @@ logging:
   file:
     name: logs/nse-bot.log
 
-# Management and Monitoring
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,metrics,prometheus
   endpoint:
     health:
       show-details: always
