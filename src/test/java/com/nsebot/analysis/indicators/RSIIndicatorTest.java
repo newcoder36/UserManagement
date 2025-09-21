@@ -1,28 +1,10 @@
 package com.nsebot.analysis.indicators;
 
 import com.nsebot.dto.StockData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-@ExtendWith(MockitoExtension.class)
-class RSIIndicatorTest {
-
-    private RSIIndicator rsiIndicator;
-    private List<StockData> testData;
-
-    @BeforeEach
-    void setUp() {
-        rsiIndicator = new RSIIndicator();
-        testData = createTestStockData();
     }
 
     @Test
