@@ -7,10 +7,10 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:h2:mem:testdb1  # Using H2 for development, PostgreSQL for production
+    url: jdbc:h2:mem:testdb1  
     driver-class-name: org.h2.Driver
     username: sa
-    password: password
+    password: password123
   
   jpa:
     hibernate:
@@ -51,7 +51,7 @@ telegram:
 nse:
   api:
     base-url: https://www.nseindia.com/api
-    timeout: 5000  # Reduced timeout - fail fast to Yahoo Finance
+    timeout: 500  # Reduced timeout - fail fast to Yahoo Finance
     retry-attempts: 1  # Reduced retries - fail fast to Yahoo Finance
     rate-limit:
       requests-per-minute: 30  # Reduced rate to avoid timeouts
@@ -94,12 +94,12 @@ logging:
   file:
     name: logs/nse-bot.log
 
-# Management and Monitoring
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,metrics,prometheus
   endpoint:
     health:
       show-details: always
