@@ -7,7 +7,7 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:h2:mem:testdb  # Using H2 for development, PostgreSQL for production
+    url: jdbc:h2:mem:testdb1  # Using H2 for development, PostgreSQL for production
     driver-class-name: org.h2.Driver
     username: sa
     password: password
@@ -21,7 +21,7 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
   
-  # Redis Configuration
+ 
   data:
     redis:
       host: localhost
